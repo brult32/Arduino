@@ -1,7 +1,7 @@
-unsigned long onePercent = 300;
-unsigned long timeOut = onePercent * 100;  //10min 600000
-const long extraTime = timeOut;  //10min 600000
-int extraCounter = -1;           //10min 600000
+unsigned long onePercent = 300;  //10min 600000
+unsigned long timeOut = onePercent * 100;
+const long extraTime = timeOut;
+int extraCounter = -1;
 unsigned long previousMillis = 0;
 unsigned long interval = 1000;
 
@@ -58,17 +58,17 @@ void playBuzz() {
 
 void (*resetFunc)(void) = 0;  //declare reset function @ address 0
 
-void timeEnd(){
-if (!doneTime) {
-      playNoise = true;
-      doneTime = true;
-    }
+void timeEnd() {
+  if (!doneTime) {
+    playNoise = true;
+    doneTime = true;
+  }
 }
-void afterEnd(){
+void afterEnd() {
   if (playNoise) {
     playBuzz();
   }
-  if (doneTime){
+  if (doneTime) {
     buttonStopNoiseState = digitalRead(buttonStopNoisePin);
     if (buttonStopNoiseState == HIGH) {
       digitalWrite(buzzerPin, LOW);
@@ -122,7 +122,7 @@ void loop() {
           }
         }
       }
-    }else {
+    } else {
       buttonChangeTimePressed = false;
     }
   }
