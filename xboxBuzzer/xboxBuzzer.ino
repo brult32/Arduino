@@ -1,11 +1,14 @@
-const long timeOut = 30000;  //10min 600000
+long timeOut = 30000;  //10min 600000
 const long quarterTime = timeOut / 4;
+const long extraTime = timeOut;  //10min 600000
+int extraCounter = 0;  //10min 600000
 unsigned long previousMillis = 0;
 unsigned long interval = 1000;
 
-const int buzzerPin = 10;
+const int buzzerPin = 9;
 const int ledInterval = 8;
 int ledTimerPins[] = {2, 3, 4, 5};
+int ledExtraPins[] = {6, 7};
 
 int loopAllLeds = 3;
 int ledCounter[] = {quarterTime, quarterTime * 2, quarterTime * 3 , (timeOut / 10) * 9};
@@ -13,10 +16,13 @@ bool ledTimerPassed[] = {false, false, false, false};
 
 int ledState = HIGH;
 
-const int buttonResetPin = 6;
+const int buttonResetPin = 10;
 int butResetState = 0;
 
-const int buttonStopNoisePin = 7;
+const int buttonChangeTimePin = 11;
+int buttonChangeTimeState = 0;
+
+const int buttonStopNoisePin = 12;
 int buttonStopNoiseState = 0;
 bool stopNoise = false;
 
@@ -30,7 +36,9 @@ void setup() {
   pinMode(buttonStopNoisePin, INPUT);
   for(int i = 0; i < loopAllLeds; i++){
     pinMode(ledTimerPins[i], OUTPUT);
-  }  
+  } 
+  pinMode(ledExtraPins[0], OUTPUT);
+  pinMode(ledExtraPins[1], OUTPUT);
 }
 
 void playBuzz(){
@@ -77,6 +85,23 @@ void loop() {
         ledState = LOW;
       }
       digitalWrite(ledInterval, ledState);
+    }
+
+    buttonChangeTimeState = digitalRead(buttonChangeTimePin);
+    if (buttonChangeTimeState == HIGH) {
+      timeOut += extraTime;
+      extraCounter++;
+      if(extraCounter >= 3){
+        timeOut = extraTime;
+        extraCounter = 0;
+      }
+      if (extraCounter != 0){
+        digitalWrite(ledExtraPins[[extraCounter], HIGH); 
+      }else{
+        for (int i = 1; i < 3; i++){
+          digitalWrite(ledExtraPins[[i], LOW); 
+        }
+      }
     }
   }
 }
