@@ -1,7 +1,7 @@
 long timeOut = 30000;  //10min 600000
 const long quarterTime = timeOut / 4;
 const long extraTime = timeOut;  //10min 600000
-int extraCounter = 0;  //10min 600000
+int extraCounter = -1;  //10min 600000
 unsigned long previousMillis = 0;
 unsigned long interval = 1000;
 
@@ -91,15 +91,15 @@ void loop() {
     if (buttonChangeTimeState == HIGH) {
       timeOut += extraTime;
       extraCounter++;
-      if(extraCounter >= 3){
+      if(extraCounter >= 2){
         timeOut = extraTime;
-        extraCounter = 0;
+        extraCounter = -1;
       }
       if (extraCounter != 0){
-        digitalWrite(ledExtraPins[[extraCounter], HIGH); 
+        digitalWrite(ledExtraPins[extraCounter], HIGH); 
       }else{
         for (int i = 1; i < 3; i++){
-          digitalWrite(ledExtraPins[[i], LOW); 
+          digitalWrite(ledExtraPins[i], LOW); 
         }
       }
     }
