@@ -1,6 +1,6 @@
 unsigned long onePercent = 300;  //10min 600000
-unsigned long timeOut = onePercent * 100;
-const long extraTime = timeOut;
+unsigned long timeOut = 30000;
+const long partnerTime = timeOut;
 int extraCounter = -1;
 unsigned long previousMillis = 0;
 unsigned long interval = 1000;
@@ -8,20 +8,20 @@ unsigned long interval = 1000;
 const int buzzerPin = 9;
 const int ledInterval = 8;
 int ledTimerPins[] = { 2, 3, 4, 5 };
-int ledExtraPins[] = { 6, 7 };
+int ledPartner = 7;
 
 int loopAllLeds = 3;
-unsigned long ledCounter[] = { onePercent * 25, onePercent * 50, onePercent * 75, onePercent * 90 };
+unsigned long ledCounter[] = { 0, 0, 0, 0 };
 bool ledTimerPassed[] = { false, false, false, false };
 
-int ledState = HIGH;
+int ledIntervalState = HIGH;
 
 const int buttonResetPin = 10;
 int butResetState = 0;
 
-const int buttonChangeTimePin = 11;
-int buttonChangeTimeState = 0;
-bool buttonChangeTimePressed = false;
+const int buttonPartnerPin = 11;
+int buttonPartnerState = 0;
+bool buttonPartnerPressed = false;
 
 const int buttonStopNoisePin = 12;
 int buttonStopNoiseState = 0;
@@ -31,18 +31,13 @@ bool doneTime = false;
 float melody[] = { 261.63, 196, 196, 220, 196, 0, 247.94, 261.63 };
 int noteDurations[] = { 4, 8, 8, 4, 4, 4, 4, 4 };
 
-void setup() {
-  pinMode(buzzerPin, OUTPUT);
-  pinMode(ledInterval, OUTPUT);
-  pinMode(buttonResetPin, INPUT);
-  pinMode(buttonStopNoisePin, INPUT);
-  for (int i = 0; i < loopAllLeds; i++) {
-    pinMode(ledTimerPins[i], OUTPUT);
-    digitalWrite(ledTimerPins[i], LOW);
-  }
-  for (int i = 0; i < 2; i++) {
-    pinMode(ledExtraPins[1], OUTPUT);
-    digitalWrite(ledExtraPins[0], LOW);
+void (*resetFunc)(void) = 0;  //declare reset function @ address 0
+
+void getLedTimers() {
+  long onePercent = timeOut / 100;
+  int tempNumbers[] = { 25, 50, 75, 90 };
+  for (int i = 0; i <= loopAllLeds; i++) {
+    ledCounter[i] = onePercent * tempNumbers[i];
   }
 }
 
@@ -55,8 +50,6 @@ void playBuzz() {
     noTone(buzzerPin);
   }
 }
-
-void (*resetFunc)(void) = 0;  //declare reset function @ address 0
 
 void timeEnd() {
   if (!doneTime) {
@@ -82,6 +75,36 @@ void afterEnd() {
   }
 }
 
+void partnerPlay() {
+  buttonPartnerState = digitalRead(buttonPartnerPin);
+  if (buttonPartnerState == HIGH) {
+    if (!buttonPartnerPressed) {
+      buttonPartnerPressed = true;
+      timeOut += partnerTime;
+      digitalWrite(ledPartner, HIGH);
+    } else {
+      buttonPartnerPressed = false;
+      timeOut -= partnerTime;
+      digitalWrite(ledPartner, LOW);
+    }
+    getLedTimers();
+  }
+}
+
+void setup() {
+  pinMode(buzzerPin, OUTPUT);
+  pinMode(ledInterval, OUTPUT);
+  pinMode(buttonResetPin, INPUT);
+  pinMode(buttonStopNoisePin, INPUT);
+  for (int i = 0; i <= loopAllLeds; i++) {
+    pinMode(ledTimerPins[i], OUTPUT);
+    digitalWrite(ledTimerPins[i], LOW);
+  }
+  pinMode(ledPartner, OUTPUT);
+  digitalWrite(ledPartner, LOW);
+  getLedTimers();
+}
+
 void loop() {
   unsigned long currentMillis = millis();
   afterEnd();
@@ -96,34 +119,14 @@ void loop() {
     }
     if (currentMillis - previousMillis >= interval) {
       previousMillis = currentMillis;
-      if (ledState == LOW) {
-        ledState = HIGH;
+      if (ledIntervalState == LOW) {
+        ledIntervalState = HIGH;
       } else {
-        ledState = LOW;
+        ledIntervalState = LOW;
       }
-      digitalWrite(ledInterval, ledState);
+      digitalWrite(ledInterval, ledIntervalState);
     }
 
-    buttonChangeTimeState = digitalRead(buttonChangeTimePin);
-    if (buttonChangeTimeState == HIGH) {
-      if (!buttonChangeTimePressed) {
-        buttonChangeTimePressed = true;
-        timeOut += extraTime;
-        extraCounter++;
-        if (extraCounter >= 2) {
-          timeOut = extraTime;
-          extraCounter = -1;
-        }
-        if (extraCounter > -1) {
-          digitalWrite(ledExtraPins[extraCounter], HIGH);
-        } else {
-          for (int i = 0; i < 2; i++) {
-            digitalWrite(ledExtraPins[i], LOW);
-          }
-        }
-      }
-    } else {
-      buttonChangeTimePressed = false;
-    }
+    partnerPlay();
   }
 }
