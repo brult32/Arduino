@@ -1,6 +1,5 @@
-unsigned long onePercent = 300;  //10min 600000
-unsigned long timeOut = 30000;
-const long partnerTime = timeOut;
+unsigned long timeOut = 600000;  //10min 600000
+unsigned const long partnerTime = timeOut;
 int extraCounter = -1;
 unsigned long previousMillis = 0;
 unsigned long interval = 1000;
@@ -21,7 +20,6 @@ int butResetState = 0;
 
 const int buttonPartnerPin = 11;
 int buttonPartnerState = 0;
-bool buttonPartnerPressed = false;
 
 const int buttonStopNoisePin = 12;
 int buttonStopNoiseState = 0;
@@ -33,14 +31,6 @@ int noteDurations[] = { 4, 8, 8, 4, 4, 4, 4, 4 };
 
 void (*resetFunc)(void) = 0;  //declare reset function @ address 0
 
-void getLedTimers() {
-  long onePercent = timeOut / 100;
-  int tempNumbers[] = { 25, 50, 75, 90 };
-  for (int i = 0; i <= loopAllLeds; i++) {
-    ledCounter[i] = onePercent * tempNumbers[i];
-  }
-}
-
 void playBuzz() {
   for (int thisNote = 0; thisNote < 8; thisNote++) {
     int noteDuration = 1000 / noteDurations[thisNote];
@@ -51,7 +41,7 @@ void playBuzz() {
   }
 }
 
-void timeEnd() {
+void timeEnded() {
   if (!doneTime) {
     playNoise = true;
     doneTime = true;
@@ -67,27 +57,6 @@ void afterEnd() {
       digitalWrite(buzzerPin, LOW);
       playNoise = false;
     }
-    butResetState = digitalRead(buttonResetPin);
-    if (butResetState == HIGH) {
-      Serial.println("resetting");
-      resetFunc();  //call reset
-    }
-  }
-}
-
-void partnerPlay() {
-  buttonPartnerState = digitalRead(buttonPartnerPin);
-  if (buttonPartnerState == HIGH) {
-    if (!buttonPartnerPressed) {
-      buttonPartnerPressed = true;
-      timeOut += partnerTime;
-      digitalWrite(ledPartner, HIGH);
-    } else {
-      buttonPartnerPressed = false;
-      timeOut -= partnerTime;
-      digitalWrite(ledPartner, LOW);
-    }
-    getLedTimers();
   }
 }
 
@@ -100,16 +69,33 @@ void setup() {
     pinMode(ledTimerPins[i], OUTPUT);
     digitalWrite(ledTimerPins[i], LOW);
   }
+
   pinMode(ledPartner, OUTPUT);
-  digitalWrite(ledPartner, LOW);
-  getLedTimers();
+  buttonPartnerState = digitalRead(buttonPartnerPin);
+  if (buttonPartnerState == HIGH) {
+    timeOut += partnerTime;
+    digitalWrite(ledPartner, HIGH);
+  } else {
+    digitalWrite(ledPartner, LOW);
+  }
+
+  long onePercent = timeOut / 100;
+  int tempNumbers[] = { 25, 50, 75, 90 };
+  for (int i = 0; i <= loopAllLeds; i++) {
+    ledCounter[i] = onePercent * tempNumbers[i];
+  }
 }
 
 void loop() {
   unsigned long currentMillis = millis();
+  butResetState = digitalRead(buttonResetPin);
+  if (butResetState == HIGH) {
+    Serial.println("resetting");
+    resetFunc();  //call reset
+  }
   afterEnd();
   if (currentMillis >= timeOut) {
-    timeEnd();
+    timeEnded();
   } else {
     for (int i = 0; i <= loopAllLeds; i++) {
       if (!ledTimerPassed[i] && currentMillis > ledCounter[i]) {
@@ -126,7 +112,5 @@ void loop() {
       }
       digitalWrite(ledInterval, ledIntervalState);
     }
-
-    partnerPlay();
   }
 }
