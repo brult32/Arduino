@@ -1,4 +1,4 @@
-unsigned long timeOut = 600000;  //10min 600000
+unsigned long timeOut = 900000;  //10min 600000
 unsigned long previousMillis = 0;
 unsigned long interval = 1000;
 
@@ -13,12 +13,10 @@ bool ledTimerPassed[] = { false, false, false, false };
 int ledIntervalState = HIGH;
 
 bool playNoise = false;
-bool doneTime = false;
+bool endTime = false;
 
 float melody[] = { 261.63, 196, 196, 220, 196, 0, 247.94, 261.63 };
 int noteDurations[] = { 4, 8, 8, 4, 4, 4, 4, 4 };
-
-void (*resetFunc)(void) = 0;  //declare reset function @ address 0
 
 void playBuzz() {
   for (int thisNote = 0; thisNote < 8; thisNote++) {
@@ -27,13 +25,6 @@ void playBuzz() {
     int pauseBetweenNotes = noteDuration * 1.30;
     delay(pauseBetweenNotes);
     noTone(buzzerPin);
-  }
-}
-
-void timeEnded() {
-  if (!doneTime) {
-    playNoise = true;
-    doneTime = true;
   }
 }
 
@@ -58,8 +49,9 @@ void loop() {
   if (playNoise) {
     playBuzz();
   }
-  if (currentMillis >= timeOut) {
-    timeEnded();
+  if (!endTime && currentMillis >= timeOut) {
+    playNoise = true;
+    endTime = true;
   } else {
     for (int i = 0; i <= loopAllLeds; i++) {
       if (!ledTimerPassed[i] && currentMillis > ledCounter[i]) {
